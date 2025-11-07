@@ -26,13 +26,20 @@ interface CV {
   isPublic: boolean;
 }
 
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  plan: string;
+  cvCount: number;
+  maxCvs: number;
+}
+
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [cvs, setCvs] = useState<CV[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const mockCvs: CV[] = [];
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -147,9 +154,11 @@ export default function Dashboard() {
         // Retirer le CV de la liste
         setCvs(cvs.filter(cv => cv.id !== cvId));
         // Mettre à jour le compteur
-        const updatedUser = { ...user, cvCount: user.cvCount - 1 };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        if (user) {
+          const updatedUser = { ...user, cvCount: user.cvCount - 1 };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
         alert("CV supprimé avec succès !");
       } else {
         alert("Erreur lors de la suppression du CV");
@@ -161,6 +170,7 @@ export default function Dashboard() {
   };
 
   const handleDownloadCV = (cvId: string) => {
+    console.log("Download CV:", cvId);
     alert("Fonctionnalité de téléchargement à venir ! 📄");
     // TODO: Implémenter le téléchargement PDF
   };

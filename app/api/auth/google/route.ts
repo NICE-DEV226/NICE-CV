@@ -4,12 +4,18 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+interface GoogleJWT {
+  email?: string;
+  name?: string;
+  picture?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { credential } = await request.json();
 
     // Décoder le JWT de Google
-    const decoded: any = jwt.decode(credential);
+    const decoded = jwt.decode(credential) as GoogleJWT | null;
 
     if (!decoded || !decoded.email) {
       return NextResponse.json(

@@ -13,12 +13,17 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -90,7 +95,7 @@ export default function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              {status !== "authenticated" && (
+              {!user && (
                 <>
                   <button
                     onClick={handleSignIn}

@@ -88,13 +88,13 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!;
-        session.user.plan = token.plan as any;
+        session.user.plan = token.plan as "FREE" | "PREMIUM";
         session.user.cvCount = token.cvCount as number;
         session.user.maxCvs = token.maxCvs as number;
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
+    async signIn() {
       // Always allow sign in for now
       return true;
     },

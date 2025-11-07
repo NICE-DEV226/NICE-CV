@@ -2,15 +2,12 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 export default function EditCV() {
   const router = useRouter();
   const params = useParams();
   const cvId = params.id as string;
   const [isLoading, setIsLoading] = useState(true);
-  const [cv, setCv] = useState<any>(null);
 
   useEffect(() => {
     const loadCV = async () => {
@@ -34,7 +31,6 @@ export default function EditCV() {
 
         if (response.ok) {
           const data = await response.json();
-          setCv(data.cv);
           
           // Sauvegarder dans le localStorage pour l'éditeur
           localStorage.setItem("cv-draft", JSON.stringify({

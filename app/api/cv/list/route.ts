@@ -22,11 +22,11 @@ export async function GET(req: NextRequest) {
       const token = authHeader.substring(7);
       console.log("Token extrait, longueur:", token.length);
       try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
         userId = decoded.userId;
         console.log("Token décodé, userId:", userId);
       } catch (error) {
-        console.error("❌ Token invalide:", error.message);
+        console.error("❌ Token invalide:", error instanceof Error ? error.message : "Unknown error");
       }
     }
 
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       select: { id: true, title: true, userId: true },
       take: 10,
     });
-    console.log("📋 Tous les CVs:", allCVs.map(cv => `${cv.title} (userId: ${cv.userId})`));
+    console.log("📋 Tous les CVs:", allCVs.map((cv: { title: string; userId: string }) => `${cv.title} (userId: ${cv.userId})`));
 
     // Récupérer TOUS les CVs de l'utilisateur (brouillons inclus)
     const cvs = await prisma.cV.findMany({
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     console.log("🕐 Timestamp requête:", new Date().toISOString());
     
     if (cvs.length > 0) {
-      console.log("Titres des CVs:", cvs.map(cv => cv.title));
+      console.log("Titres des CVs:", cvs.map((cv: { title: string }) => cv.title));
     }
 
     // Si aucun CV, vérifier tous les CVs
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         take: 10,
       });
       console.log("Tous les CVs dans la base:", allCvs.length);
-      allCvs.forEach(cv => {
+      allCvs.forEach((cv: { id: string; userId: string; title: string }) => {
         console.log(`  - ${cv.title} (userId: ${cv.userId})`);
       });
     }

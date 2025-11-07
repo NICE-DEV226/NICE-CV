@@ -1,11 +1,17 @@
+import type { PersonalDetails, Experience, Education, Language, Skill, Hobby } from "@/type";
+
 /**
  * Utilitaire de sérialisation pour éliminer les références circulaires
  * et les objets React des données avant envoi à l'API
  */
 
-export function serializeCVData(data: any) {
+type SerializableValue = string | number | boolean | null | SerializableObject | SerializableArray;
+type SerializableObject = { [key: string]: SerializableValue };
+type SerializableArray = SerializableValue[];
+
+export function serializeCVData(data: unknown): SerializableValue {
   // Fonction récursive pour nettoyer les objets
-  function clean(obj: any): any {
+  function clean(obj: unknown): SerializableValue {
     // Valeurs primitives
     if (obj === null || obj === undefined) return null;
     if (typeof obj === 'string') return obj;
@@ -19,20 +25,21 @@ export function serializeCVData(data: any) {
     
     // Objets
     if (typeof obj === 'object') {
+      const objRecord = obj as Record<string, unknown>;
       // Éviter les objets React et DOM
-      if (obj.$$typeof || obj._owner || obj._store || obj.nodeType) {
+      if (objRecord.$typeof || objRecord._owner || objRecord._store || objRecord.nodeType) {
         return null;
       }
       
-      const cleaned: any = {};
-      for (const key in obj) {
+      const cleaned: SerializableObject = {};
+      for (const key in objRecord) {
         // Ignorer les propriétés React internes
         if (key.startsWith('_') || key.startsWith('$') || key === 'ref') {
           continue;
         }
         
-        if (obj.hasOwnProperty(key)) {
-          const value = obj[key];
+        if (Object.prototype.hasOwnProperty.call(objRecord, key)) {
+          const value = objRecord[key];
           // Ignorer les fonctions
           if (typeof value === 'function') {
             continue;
@@ -55,12 +62,12 @@ export function serializeCVData(data: any) {
 export function prepareCVForAPI(cvData: {
   userId: string;
   title: string;
-  personalDetails: any;
-  experiences: any[];
-  educations: any[];
-  languages: any[];
-  skills: any[];
-  hobbies: any[];
+  personalDetails: PersonalDetails;
+  experiences: Experience[];
+  educations: Education[];
+  languages: Language[];
+  skills: Skill[];
+  hobbies: Hobby[];
   theme: string;
   template: string;
   isDraft: boolean;
@@ -78,8 +85,8 @@ export function prepareCVForAPI(cvData: {
       profileImage: cvData.personalDetails?.profileImage || null,
     },
     experiences: (cvData.experiences || []).map(exp => ({
-      company: String(exp?.company || ''),
-      position: String(exp?.position || ''),
+      company: String(exp?.companyName || ''),
+      position: String(exp?.jobTitle || ''),
       startDate: String(exp?.startDate || ''),
       endDate: String(exp?.endDate || ''),
       description: String(exp?.description || ''),
@@ -92,12 +99,12 @@ export function prepareCVForAPI(cvData: {
       description: String(edu?.description || ''),
     })),
     languages: (cvData.languages || []).map(lang => ({
-      name: String(lang?.name || ''),
-      level: String(lang?.level || ''),
+      name: String(lang?.language || ''),
+      level: String(lang?.proficiency || ''),
     })),
     skills: (cvData.skills || []).map(skill => ({
       name: String(skill?.name || ''),
-      level: String(skill?.level || ''),
+      level: '',
     })),
     hobbies: (cvData.hobbies || []).map(hobby => ({
       name: String(hobby?.name || ''),

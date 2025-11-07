@@ -7,9 +7,22 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+interface GoogleAccounts {
+  id: {
+    initialize: (config: { client_id: string; callback: (response: GoogleResponse) => void }) => void;
+    renderButton: (element: HTMLElement | null, options: Record<string, string | number>) => void;
+  };
+}
+
+interface GoogleResponse {
+  credential: string;
+}
+
 declare global {
   interface Window {
-    google: any;
+    google?: {
+      accounts: GoogleAccounts;
+    };
   }
 }
 
@@ -54,7 +67,7 @@ export default function SignIn() {
     };
   }, []);
 
-  const handleGoogleSignIn = async (response: any) => {
+  const handleGoogleSignIn = async (response: GoogleResponse) => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/auth/google", {
@@ -71,7 +84,7 @@ export default function SignIn() {
       } else {
         setError("Erreur lors de la connexion avec Google");
       }
-    } catch (error) {
+    } catch {
       setError("Une erreur est survenue");
     } finally {
       setIsLoading(false);
@@ -98,7 +111,7 @@ export default function SignIn() {
       } else {
         setError("Email ou mot de passe incorrect");
       }
-    } catch (error) {
+    } catch {
       setError("Une erreur est survenue");
     } finally {
       setIsLoading(false);
@@ -230,7 +243,7 @@ export default function SignIn() {
             href="/"
             className="text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center space-x-2"
           >
-            <span>← Retour à l'accueil</span>
+            <span>← Retour à l&apos;accueil</span>
           </Link>
         </div>
       </div>

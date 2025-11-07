@@ -7,9 +7,22 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+interface GoogleAccounts {
+  id: {
+    initialize: (config: { client_id: string; callback: (response: GoogleResponse) => void }) => void;
+    renderButton: (element: HTMLElement | null, options: Record<string, string | number>) => void;
+  };
+}
+
+interface GoogleResponse {
+  credential: string;
+}
+
 declare global {
   interface Window {
-    google: any;
+    google?: {
+      accounts: GoogleAccounts;
+    };
   }
 }
 
@@ -54,7 +67,7 @@ export default function SignUp() {
     };
   }, []);
 
-  const handleGoogleSignUp = async (response: any) => {
+  const handleGoogleSignUp = async (response: GoogleResponse) => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/auth/google", {
@@ -71,7 +84,7 @@ export default function SignUp() {
       } else {
         setError("Erreur lors de l'inscription avec Google");
       }
-    } catch (error) {
+    } catch {
       setError("Une erreur est survenue");
     } finally {
       setIsLoading(false);
@@ -99,7 +112,7 @@ export default function SignUp() {
         const data = await res.json();
         setError(data.error || "Erreur lors de l'inscription");
       }
-    } catch (error) {
+    } catch {
       setError("Une erreur est survenue");
     } finally {
       setIsLoading(false);
@@ -252,7 +265,7 @@ export default function SignUp() {
             href="/"
             className="text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center space-x-2"
           >
-            <span>← Retour à l'accueil</span>
+            <span>← Retour à l&apos;accueil</span>
           </Link>
         </div>
       </div>

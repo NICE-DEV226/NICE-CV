@@ -72,7 +72,7 @@ const PersonalDetailsForm: React.FC<Props> = ({ personalDetails, setPersonalDeta
           onChange={handleFileChange}
           className='file-input file-input-bordered w-full file-input-primary'
         />
-        <p className='text-xs text-gray-500'>Choisissez une nouvelle photo pour remplacer l'actuelle</p>
+        <p className='text-xs text-gray-500'>Choisissez une nouvelle photo pour remplacer l&apos;actuelle</p>
       </div>
 
       <input

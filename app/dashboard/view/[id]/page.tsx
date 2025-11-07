@@ -5,13 +5,27 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Edit } from "lucide-react";
 import CVPreview from "@/app/components/CVPreview";
+import type { PersonalDetails, Experience, Education, Language, Skill, Hobby } from "@/type";
+
+interface CVData {
+  id: string;
+  title: string;
+  personalDetails: PersonalDetails;
+  experiences: Experience[];
+  educations: Education[];
+  languages: Language[];
+  skills: Skill[];
+  hobbies: Hobby[];
+  theme: string;
+  template: string;
+}
 
 export default function ViewCV() {
   const router = useRouter();
   const params = useParams();
   const cvId = params.id as string;
   const [isLoading, setIsLoading] = useState(true);
-  const [cv, setCv] = useState<any>(null);
+  const [cv, setCv] = useState<CVData | null>(null);
 
   useEffect(() => {
     const loadCV = async () => {

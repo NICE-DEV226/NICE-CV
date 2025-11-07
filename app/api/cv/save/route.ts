@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
         userId = decoded.userId;
       } catch (error) {
         console.error("Token invalide:", error);

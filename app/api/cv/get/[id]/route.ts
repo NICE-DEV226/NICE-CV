@@ -9,11 +9,12 @@ export const revalidate = 0;
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log("=== API /api/cv/get appelée pour ID:", params.id);
+  const resolvedParams = await params;
+  console.log("=== API /api/cv/get appelée pour ID:", resolvedParams.id);
   try {
-    const cvId = params.id;
+    const cvId = resolvedParams.id;
     const authHeader = req.headers.get("authorization");
 
     let userId: string | null = null;
@@ -21,7 +22,7 @@ export async function GET(
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
         userId = decoded.userId;
       } catch (error) {
         console.error("Token invalide:", error);

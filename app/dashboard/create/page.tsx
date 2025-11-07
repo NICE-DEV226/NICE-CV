@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, RotateCw, Save, ArrowLeft, Crown } from "lucide-react";
+import { Eye, RotateCw, Save, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import PersonalDetailsForm from "@/app/components/PersonalDetailsForm";
 import { useEffect, useRef, useState } from "react";
@@ -33,9 +33,18 @@ import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
 import confetti from "canvas-confetti";
 
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  plan: string;
+  cvCount: number;
+  maxCvs: number;
+}
+
 export default function CreateCV() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(
     personalDetailsPreset,
@@ -52,7 +61,6 @@ export default function CreateCV() {
   const [cvTitle, setCvTitle] = useState("Mon CV");
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isDraft, setIsDraft] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCvId, setEditingCvId] = useState<string | null>(null);
 
@@ -84,8 +92,8 @@ export default function CreateCV() {
           setIsEditMode(true);
           setEditingCvId(draft.editingId);
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement du brouillon:", error);
+      } catch {
+        console.error("Erreur lors du chargement du brouillon");
       }
     }
   }, []);
@@ -151,7 +159,7 @@ export default function CreateCV() {
 
           setFile(defaultFile);
         })
-        .catch((err) => console.log("Pas d'image par défaut"));
+        .catch(() => console.log("Pas d'image par défaut"));
     }
   }, []); // Exécuter une seule fois au montage
 
@@ -266,7 +274,7 @@ export default function CreateCV() {
       const currentUser = JSON.parse(userData);
       
       // Convertir l'image en base64 si elle existe
-      let personalDetailsWithImage = { ...personalDetails };
+      const personalDetailsWithImage = { ...personalDetails };
       if (file) {
         console.log("📸 Conversion de l'image en base64...");
         const reader = new FileReader();
@@ -311,16 +319,16 @@ export default function CreateCV() {
       const apiUrl = isEditMode ? "/api/cv/update" : "/api/cv/save";
       const method = isEditMode ? "PUT" : "POST";
       
-      // Ajouter l'ID du CV si on est en mode édition
-      if (isEditMode && editingCvId) {
-        cvData.cvId = editingCvId;
-      }
+      // Créer l'objet final avec cvId si nécessaire
+      const requestData = isEditMode && editingCvId 
+        ? { ...cvData, cvId: editingCvId }
+        : cvData;
       
       console.log("📦 Données envoyées:", {
-        cvId: cvData.cvId,
-        title: cvData.title,
-        personalDetailsName: cvData.personalDetails?.fullName,
-        hasImage: !!cvData.personalDetails?.profileImage
+        cvId: isEditMode ? editingCvId : undefined,
+        title: requestData.title,
+        personalDetailsName: requestData.personalDetails?.fullName,
+        hasImage: !!requestData.personalDetails?.profileImage
       });
       
       const response = await fetch(apiUrl, {
@@ -329,7 +337,7 @@ export default function CreateCV() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(cvData),
+        body: JSON.stringify(requestData),
       });
 
       console.log("Réponse API:", response.status, response.ok);
@@ -361,7 +369,6 @@ export default function CreateCV() {
           }, 500);
         } else {
           setLastSaved(new Date());
-          setIsDraft(true);
           alert("✅ Brouillon sauvegardé !");
         }
       } else {
