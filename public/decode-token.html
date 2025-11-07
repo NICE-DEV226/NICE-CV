@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Decode Token</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .box {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 DÉCODAGE TOKEN JWT</h1>
+    
+    <div class="box">
+        <h2>Token JWT</h2>
+        <button onclick="decodeToken()">Décoder le Token</button>
+        <pre id="result"></pre>
+    </div>
+
+    <div class="box">
+        <h2>Comparaison</h2>
+        <button onclick="compare()">Comparer User vs Token</button>
+        <pre id="compare-result"></pre>
+    </div>
+
+    <script>
+        function decodeToken() {
+            const result = document.getElementById('result');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ Pas de token dans localStorage</span>';
+                return;
+            }
+            
+            try {
+                // Décoder le JWT (sans vérification de signature)
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    result.innerHTML = '<span class="error">❌ Token invalide (pas 3 parties)</span>';
+                    return;
+                }
+                
+                const payload = JSON.parse(atob(parts[1]));
+                
+                result.innerHTML = '<span class="success">✅ Token décodé :</span>\n\n';
+                result.innerHTML += JSON.stringify(payload, null, 2);
+                
+                result.innerHTML += '\n\n<span class="success">userId dans le token:</span> ' + payload.userId;
+                result.innerHTML += '\n<span class="success">email dans le token:</span> ' + (payload.email || 'N/A');
+                
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ Erreur: ' + error.message + '</span>';
+            }
+        }
+
+        function compare() {
+            const result = document.getElementById('compare-result');
+            
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const token = localStorage.getItem('token');
+                
+                if (!user || !token) {
+                    result.innerHTML = '<span class="error">❌ User ou token manquant</span>';
+                    return;
+                }
+                
+                const parts = token.split('.');
+                const payload = JSON.parse(atob(parts[1]));
+                
+                result.innerHTML = '<span class="success">COMPARAISON:</span>\n\n';
+                result.innerHTML += 'User dans localStorage:\n';
+                result.innerHTML += '  ID: ' + user.id + '\n';
+                result.innerHTML += '  Email: ' + user.email + '\n';
+                result.innerHTML += '  Name: ' + user.name + '\n';
+                result.innerHTML += '  CVs: ' + user.cvCount + '\n\n';
+                
+                result.innerHTML += 'User dans le token JWT:\n';
+                result.innerHTML += '  userId: ' + payload.userId + '\n';
+                result.innerHTML += '  email: ' + (payload.email || 'N/A') + '\n\n';
+                
+                if (user.id === payload.userId) {
+                    result.innerHTML += '<span class="success">✅ IDs CORRESPONDENT !</span>\n';
+                } else {
+                    result.innerHTML += '<span class="error">❌ IDs NE CORRESPONDENT PAS !</span>\n';
+                    result.innerHTML += '<span class="error">Le token ne correspond pas à l\'utilisateur !</span>\n';
+                    result.innerHTML += '<span class="error">SOLUTION: Reconnectez-vous</span>\n';
+                }
+                
+            } catch (error) {
+                result.innerHTML = '<span class="error">❌ Erreur: ' + error.message + '</span>';
+            }
+        }
+
+        // Auto-decode au chargement
+        window.onload = function() {
+            decodeToken();
+            setTimeout(compare, 100);
+        };
+    </script>
+</body>
+</html>

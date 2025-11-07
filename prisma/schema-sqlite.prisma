@@ -1,0 +1,118 @@
+// NICE-CV Schema for SQLite (Local Development)
+// This is a simplified version for local development without external dependencies
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// User model for NICE-CV
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+
+  // NICE-CV specific fields
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Subscription info
+  plan          String    @default("FREE") // "FREE" or "PREMIUM"
+  planExpiresAt DateTime?
+  stripeCustomerId String?
+
+  // Usage tracking
+  cvCount       Int       @default(0)
+  maxCvs        Int       @default(3) // 3 for free users, 10 for premium
+
+  // Relations
+  cvs           CV[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model CV {
+  id          String   @id @default(cuid())
+  title       String   @default("Mon CV")
+  userId      String
+
+  // CV Content (stored as JSON text in SQLite)
+  personalDetails String @default("{}")
+  experiences     String @default("[]")
+  educations      String @default("[]")
+  languages       String @default("[]")
+  skills          String @default("[]")
+  hobbies         String @default("[]")
+
+  // Design settings
+  theme       String   @default("nice-theme")
+  template    String   @default("classic")
+
+  // Metadata
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cvs")
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  stripeSessionId String   @unique
+  amount          Int      // Amount in cents
+  currency        String   @default("eur")
+  status          String   @default("PENDING") // "PENDING", "COMPLETED", "FAILED", "CANCELLED"
+  plan            String   // "FREE", "PREMIUM"
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Template model for premium templates
+model Template {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  preview     String   // URL to preview image
+  category    String
+  isPremium   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+
+  // Template configuration (stored as JSON text in SQLite)
+  config      String   @default("{}")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("templates")
+}
+
+// Feature flags for A/B testing
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  isEnabled   Boolean  @default(false)
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}

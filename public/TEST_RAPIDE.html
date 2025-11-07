@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Rapide - NICE-CV</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .box {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid #00ff00;
+        }
+        button {
+            background: #00ff00;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+    </style>
+</head>
+<body>
+    <h1>🔍 TEST RAPIDE - NICE-CV</h1>
+    
+    <div class="box">
+        <h2>1. Vérification localStorage</h2>
+        <button onclick="checkLocalStorage()">Vérifier</button>
+        <pre id="localStorage-result"></pre>
+    </div>
+
+    <div class="box">
+        <h2>2. Test API</h2>
+        <button onclick="testAPI()">Tester</button>
+        <pre id="api-result"></pre>
+    </div>
+
+    <div class="box">
+        <h2>3. Actions Rapides</h2>
+        <button onclick="clearAll()">Vider localStorage</button>
+        <button onclick="goToSignin()">Aller à la connexion</button>
+    </div>
+
+    <script>
+        function checkLocalStorage() {
+            const result = document.getElementById('localStorage-result');
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            
+            let output = '';
+            
+            if (!user) {
+                output += '<span class="error">❌ User: ABSENT</span>\n';
+            } else {
+                try {
+                    const userData = JSON.parse(user);
+                    output += '<span class="success">✅ User: PRÉSENT</span>\n';
+                    output += `   ID: ${userData.id}\n`;
+                    output += `   Email: ${userData.email}\n`;
+                    output += `   Name: ${userData.name}\n`;
+                    output += `   CVs: ${userData.cvCount}/${userData.maxCvs}\n`;
+                } catch (e) {
+                    output += '<span class="error">❌ User: INVALIDE (JSON error)</span>\n';
+                }
+            }
+            
+            if (!token) {
+                output += '<span class="error">❌ Token: ABSENT</span>\n';
+            } else {
+                output += '<span class="success">✅ Token: PRÉSENT</span>\n';
+                const parts = token.split('.');
+                output += `   Format: ${parts.length === 3 ? 'JWT valide' : 'INVALIDE'}\n`;
+                output += `   Longueur: ${token.length} caractères\n`;
+            }
+            
+            result.innerHTML = output;
+        }
+
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '⏳ Test en cours...\n';
+            
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                result.innerHTML = '<span class="error">❌ Pas de token. Connectez-vous d\'abord.</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/cv/list', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = '<span class="success">✅ API fonctionne !</span>\n';
+                    result.innerHTML += `CVs: ${data.cvs?.length || 0}\n`;
+                    result.innerHTML += `User: ${JSON.stringify(data.user, null, 2)}\n`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ Erreur ${response.status}</span>\n`;
+                    result.innerHTML += JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ Erreur: ${error.message}</span>`;
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Vider localStorage ?')) {
+                localStorage.clear();
+                alert('✅ localStorage vidé !');
+                checkLocalStorage();
+            }
+        }
+
+        function goToSignin() {
+            window.location.href = '/auth/signin';
+        }
+
+        // Auto-check au chargement
+        window.onload = checkLocalStorage;
+    </script>
+</body>
+</html>

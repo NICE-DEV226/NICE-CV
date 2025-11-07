@@ -1,0 +1,35 @@
+# Robots.txt for CV Builder
+# This file tells search engine crawlers which pages they can access on your site
+
+User-agent: *
+Allow: /
+
+# Disallow access to API routes and internal Next.js files
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow access to important static files
+Allow: /favicon.ico
+Allow: /profile.jpg
+Allow: /*.css
+Allow: /*.js
+
+# Sitemap location
+Sitemap: https://cvbuilder-app.vercel.app/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Additional directives for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1

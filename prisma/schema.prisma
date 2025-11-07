@@ -1,0 +1,174 @@
+// This is your Prisma schema file for NICE-CV
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+// User model for NICE-CV
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+
+  // NICE-CV specific fields
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Subscription info
+  plan          UserPlan  @default(FREE)
+  planExpiresAt DateTime?
+  stripeCustomerId String?
+
+  // Usage tracking
+  cvCount       Int       @default(0)
+  maxCvs        Int       @default(3) // 3 for free users, 10 for premium
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  cvs           CV[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model CV {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String   @default("Mon CV")
+  userId      String   @db.ObjectId
+
+  // CV Content (stored as JSON)
+  personalDetails Json
+  experiences     Json
+  educations      Json
+  languages       Json
+  skills          Json
+  hobbies         Json
+
+  // Design settings
+  theme       String   @default("nice-theme")
+  template    String   @default("classic")
+
+  // Metadata
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cvs")
+}
+
+model Payment {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  stripeSessionId String        @unique
+  amount          Int           // Amount in cents
+  currency        String        @default("eur")
+  status          PaymentStatus @default(PENDING)
+  plan            UserPlan
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Enums
+enum UserPlan {
+  FREE
+  PREMIUM
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Template model for premium templates
+model Template {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  preview     String   // URL to preview image
+  category    String
+  isPremium   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+
+  // Template configuration
+  config      Json     // Template-specific settings
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("templates")
+}
+
+// Feature flags for A/B testing
+model FeatureFlag {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  isEnabled   Boolean  @default(false)
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .box {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        pre { 
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔧 Réparation Token</h1>
+        <p>Cliquez sur le bouton pour régénérer un token valide</p>
+        
+        <button onclick="fixToken()">Réparer le Token</button>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function fixToken() {
+            const result = document.getElementById('result');
+            result.innerHTML = '⏳ Réparation en cours...';
+            
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                
+                if (!user || !user.id) {
+                    result.innerHTML = '<p class="error">❌ Pas d\'utilisateur dans localStorage</p><p>Reconnectez-vous normalement</p>';
+                    setTimeout(() => {
+                        window.location.href = '/auth/signin';
+                    }, 2000);
+                    return;
+                }
+                
+                // Appeler l'API pour régénérer le token
+                const response = await fetch('/api/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: user.id }),
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Sauvegarder le nouveau token
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    result.innerHTML = `
+                        <p class="success">✅ Token réparé avec succès !</p>
+                        <p>Utilisateur : ${data.user.name}</p>
+                        <p>Email : ${data.user.email}</p>
+                        <p>CVs : ${data.user.cvCount}/${data.user.maxCvs}</p>
+                        <p style="margin-top: 20px;">Redirection vers le dashboard...</p>
+                    `;
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    result.innerHTML = `<p class="error">❌ Erreur : ${error.error}</p>`;
+                }
+                
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ Erreur : ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-fix au chargement
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auto') === 'true') {
+                fixToken();
+            }
+        };
+    </script>
+</body>
+</html>
