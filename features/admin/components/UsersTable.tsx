@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/utils/date";
-import type { User, Role, UserPlan } from "@prisma/client";
+import type { User, UserPlan } from "@prisma/client";
 
 interface UserWithCounts extends User {
     _count: {
@@ -66,8 +66,8 @@ export function UsersTable({ users }: UsersTableProps) {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span
                                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.plan === "PREMIUM"
-                                                ? "bg-purple-100 text-purple-800"
-                                                : "bg-gray-100 text-gray-800"
+                                            ? "bg-purple-100 text-purple-800"
+                                            : "bg-gray-100 text-gray-800"
                                             }`}
                                     >
                                         {user.plan}
