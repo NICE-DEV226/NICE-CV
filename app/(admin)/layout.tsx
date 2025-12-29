@@ -24,7 +24,7 @@ export default async function AdminLayout({
             // throw new Error("Not admin role");
             redirect("/admin/login");
         }
-    } catch (_err) {
+    } catch {
         // If token is invalid or expired
         redirect("/admin/login");
     }

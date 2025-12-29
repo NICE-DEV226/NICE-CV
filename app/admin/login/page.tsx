@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 
 export default function AdminLogin() {
@@ -9,7 +8,6 @@ export default function AdminLogin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,7 +27,7 @@ export default function AdminLogin() {
                 const data = await res.json();
                 setError(data.error || "Login failed");
             }
-        } catch (_err) {
+        } catch {
             setError("An error occurred. Please try again.");
         } finally {
             setLoading(false);

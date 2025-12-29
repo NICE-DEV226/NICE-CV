@@ -518,7 +518,7 @@ export default function Dashboard() {
                 </p>
                 <div className="mt-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-xs rounded">
                   <p className="font-bold">Note importante :</p>
-                  <p>Le paiement est uniquement disponible pour la <strong>Côte d'Ivoire</strong> (Orange Money, Wave, MTN) pour le moment.</p>
+                  <p>Le paiement est uniquement disponible pour la <strong>Côte d&apos;Ivoire</strong> (Orange Money, Wave, MTN) pour le moment.</p>
                 </div>
               </div>
               <button
