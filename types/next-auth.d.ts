@@ -1,11 +1,10 @@
 import "next-auth";
-import { UserPlan, Role } from "@prisma/client";
+import { UserPlan } from "@prisma/client";
 
 declare module "next-auth" {
   interface User {
     id: string;
     plan: UserPlan;
-    role: Role;
     cvCount: number;
     maxCvs: number;
   }
@@ -17,7 +16,6 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       plan: UserPlan;
-      role: Role;
       cvCount: number;
       maxCvs: number;
     };
@@ -27,7 +25,6 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     plan: UserPlan;
-    role: Role;
     cvCount: number;
     maxCvs: number;
   }

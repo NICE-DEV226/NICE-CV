@@ -28,9 +28,6 @@ export function UsersTable({ users }: UsersTableProps) {
                                 CVs
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Rôle
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Date d'inscription
                             </th>
                         </tr>
@@ -75,9 +72,6 @@ export function UsersTable({ users }: UsersTableProps) {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {user._count.cvs}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    <span className="capitalize">{user.role?.toLowerCase() || 'user'}</span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {formatDate(user.createdAt)}

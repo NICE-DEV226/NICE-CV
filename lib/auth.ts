@@ -33,7 +33,6 @@ export const authOptions: NextAuthOptions = {
             name: true,
             image: true,
             password: true,
-            role: true,
             plan: true,
             cvCount: true,
             maxCvs: true,
@@ -58,7 +57,6 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
-          role: user.role,
           plan: user.plan,
           cvCount: user.cvCount,
           maxCvs: user.maxCvs,
@@ -74,7 +72,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.plan = user.plan;
-        token.role = user.role;
         token.cvCount = user.cvCount;
         token.maxCvs = user.maxCvs;
       }
@@ -82,7 +79,6 @@ export const authOptions: NextAuthOptions = {
       // Update token when session is updated
       if (trigger === "update" && session) {
         token.plan = session.user.plan;
-        token.role = session.user.role;
         token.cvCount = session.user.cvCount;
         token.maxCvs = session.user.maxCvs;
       }
@@ -93,7 +89,6 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.sub!;
         session.user.plan = token.plan as "FREE" | "PREMIUM";
-        session.user.role = token.role as "USER" | "ADMIN";
         session.user.cvCount = token.cvCount as number;
         session.user.maxCvs = token.maxCvs as number;
       }
