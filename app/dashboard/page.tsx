@@ -40,11 +40,12 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [cvs, setCvs] = useState<CV[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
     const token = localStorage.getItem("token");
-    
+
     if (!userData || !token) {
       // Pas de données, nettoyage et redirection
       localStorage.clear();
@@ -64,11 +65,10 @@ export default function Dashboard() {
     }
 
     setUser(JSON.parse(userData));
-    
+
     // Récupérer les CVs depuis l'API
     const fetchCVs = async () => {
       try {
-        console.log("Récupération des CVs...");
         const response = await fetch("/api/cv/list", {
           method: "GET",
           headers: {
@@ -78,14 +78,12 @@ export default function Dashboard() {
           cache: "no-store",
         });
 
-        console.log("Réponse API CVs:", response.status);
-
         const data = await response.json();
 
         if (response.status === 401) {
           // Token invalide - régénérer automatiquement
           console.log("Token invalide, régénération...");
-          
+
           const refreshResponse = await fetch("/api/auth/refresh", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -107,8 +105,6 @@ export default function Dashboard() {
         }
 
         if (response.ok) {
-          console.log("CVs reçus:", data.cvs?.length || 0, "CVs");
-          console.log("Données:", data);
           setCvs(data.cvs || []);
           // Mettre à jour les infos utilisateur
           if (data.user) {
@@ -199,6 +195,35 @@ export default function Dashboard() {
   const canCreateMore = cvCount < maxCvs;
   const isPremium = user.plan === "PREMIUM";
 
+  // Payment Integration
+  const handleUpgrade = async () => {
+    try {
+      setIsProcessingUpgrade(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/payment/checkout", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        // Rediriger vers Genius Pay
+        window.location.href = data.url;
+      } else {
+        alert("Erreur lors de l'initialisation du paiement : " + (data.error || "Inconnue"));
+      }
+    } catch (error) {
+      console.error("Erreur upgrade:", error);
+      alert("Une erreur est survenue.");
+    } finally {
+      setIsProcessingUpgrade(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50">
       {/* Header */}
@@ -254,7 +279,7 @@ export default function Dashboard() {
             Gérez vos CV professionnels
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Connecté en tant que : {user.email} (ID: {user.id?.substring(0, 8)}...)
+            Connecté en tant que : {user.email}
           </p>
         </div>
 
@@ -329,30 +354,9 @@ export default function Dashboard() {
               Créer un nouveau CV
             </Link>
           ) : (
-            <button
-              disabled
+            <div
               className="bg-gray-300 text-gray-500 px-6 py-3 rounded-lg font-semibold flex items-center justify-center cursor-not-allowed"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Limite atteinte
-            </button>
-          )}
-
-          {!isPremium && (
-            <button
-              onClick={() => alert("Fonctionnalité de paiement à venir ! 🚀")}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center hover:shadow-lg hover:scale-105 transition-all"
-            >
-              <Crown className="h-5 w-5 mr-2" />
-              Passer à Premium - 5€
-            </button>
-          )}
-        </div>
-
-        {/* Brouillon en cours */}
-        {typeof window !== 'undefined' && localStorage.getItem("cv-draft") && (
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6 mb-8">
-            <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-yellow-600" />
@@ -382,8 +386,8 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* CV List */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -465,30 +469,30 @@ export default function Dashboard() {
                       {cv.template}
                     </span>
                     <div className="flex space-x-1">
-                      <button 
+                      <button
                         onClick={() => handleViewCV(cv.id)}
-                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900" 
+                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
                         title="Voir"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleEditCV(cv.id)}
-                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900" 
+                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
                         title="Modifier"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDownloadCV(cv.id)}
-                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900" 
+                        className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
                         title="Télécharger"
                       >
                         <Download className="h-4 w-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDeleteCV(cv.id, cv.title)}
-                        className="p-2 rounded hover:bg-red-100 transition-colors text-gray-600 hover:text-red-600" 
+                        className="p-2 rounded hover:bg-red-100 transition-colors text-gray-600 hover:text-red-600"
                         title="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -512,13 +516,22 @@ export default function Dashboard() {
                 <p className="text-gray-700 text-sm">
                   Débloquez 10 CV supplémentaires et des templates exclusifs
                 </p>
+                <div className="mt-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-xs rounded">
+                  <p className="font-bold">Note importante :</p>
+                  <p>Le paiement est uniquement disponible pour la <strong>Côte d'Ivoire</strong> (Orange Money, Wave, MTN) pour le moment.</p>
+                </div>
               </div>
               <button
-                onClick={() => alert("Fonctionnalité de paiement à venir ! 🚀")}
-                className="bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors flex items-center"
+                onClick={handleUpgrade}
+                disabled={isProcessingUpgrade}
+                className="bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors flex items-center disabled:opacity-75 disabled:cursor-wait"
               >
-                <Crown className="h-5 w-5 mr-2" />
-                5€ seulement
+                {isProcessingUpgrade ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Crown className="h-5 w-5 mr-2" />
+                )}
+                {isProcessingUpgrade ? "Patientez..." : "5€ seulement"}
               </button>
             </div>
           </div>
